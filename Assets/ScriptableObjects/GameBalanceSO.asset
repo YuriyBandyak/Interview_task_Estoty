@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd574eea01c7c7544a20237c1a93e5c7, type: 3}
+  m_Name: GameBalanceSO
+  m_EditorClassIdentifier: 
+  _enemySpawnInterval: 1.1111112e+9
+  _scoreForKilledEnemy: 1
+  _increaseScoreByEnemyPlayerCollision: 0
