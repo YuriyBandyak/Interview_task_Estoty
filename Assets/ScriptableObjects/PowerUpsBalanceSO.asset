@@ -14,11 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _powerUpsDropChancesByEnemyType:
   - Key: 0
-    Value: 1
+    Value: 0.4
   _powerUpsDropChances:
   - Key: 1
     Value: 1
   - Key: 2
-    Value: 0.4
+    Value: 0.3
+  - Key: 3
+    Value: 0.7
   _speed: 2
-  _fireRateIncrease: 0.98
+  _fireRateIncrease: 0.985

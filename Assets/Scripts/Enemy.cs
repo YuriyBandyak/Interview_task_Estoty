@@ -59,7 +59,7 @@ public class Enemy : MonoBehaviour, IPoolable {
             {
                 var projectile = _projectilesPool.Get();
                 projectile.gameObject.SetActive(true);
-                projectile.Init(1, OnProjectileDestroy);
+                projectile.Init(1, OnProjectileDestroy, _enemyBalance.ProjectileSpeed);
                 projectile.transform.position = transform.position;
                 _fireTimer -= _enemyBalance.FireInterval;
             }

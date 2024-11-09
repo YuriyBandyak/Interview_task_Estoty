@@ -9,6 +9,7 @@ public class EnemyBalanceSO : ScriptableObject {
     [SerializeField] private float _speed = 2f;
     [SerializeField] private float _fireInterval = 2.5f;
     [SerializeField] private float _canFireChance = .4f;
+    [SerializeField] private float _projectileSpeed = 3.5f;
 
     public float PowerUpSpawnChance => _powerUpSpawnChance;
     public int MinimalHealth => _minimalHealth;
@@ -17,4 +18,5 @@ public class EnemyBalanceSO : ScriptableObject {
     public float Speed => _speed;
     public float FireInterval => _fireInterval;
     public float CanFireChance => _canFireChance;
+    public float ProjectileSpeed => _projectileSpeed;
 }

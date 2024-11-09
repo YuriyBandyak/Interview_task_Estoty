@@ -5,15 +5,16 @@ public class Projectile : MonoBehaviour, IPoolable {
 
     private const float OutOfScreenOffset = .1f;
 
-    [SerializeField] private float _speed = 0.0f;
     [SerializeField] private Vector3 _direction = Vector3.up;
+    private float _speed = 0.0f;
     private int _damage = 1;
 
     private event Action _onHitAction;
     private event Action _returnToPoolAction;
 
-    public void Init(int damage, Action<Projectile> ReturnToPoolAction, Action OnHitAction = null) {
+    public void Init(int damage, Action<Projectile> ReturnToPoolAction, float speed, Action OnHitAction = null) {
         _damage = damage;
+        _speed = speed;
         _returnToPoolAction = () => ReturnToPoolAction(this);
         this._onHitAction = OnHitAction;
         gameObject.SetActive(true);
@@ -37,7 +38,7 @@ public class Projectile : MonoBehaviour, IPoolable {
     }
 
     private void CheckBounds() {
-        if (transform.IsOutOfScreen(OutOfScreenOffset))
+        if (transform.IsOutOfScreen(OutOfScreenOffset)) // could just setup some box colliders denepdable on screen size and use OnTriggerEnter
         {
             Destroy();
         }

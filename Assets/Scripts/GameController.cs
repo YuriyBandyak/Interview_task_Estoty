@@ -3,6 +3,7 @@ using PrimeTween;
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
@@ -41,6 +42,7 @@ public class GameController : MonoBehaviour {
         _particlesPool.Init();
         _powerUpsPool.Init();
 
+        SubscribeToPlayerEvents();
         _player.Init(_particlesPool, _playerProjectilesPool, _playerAllowedMovementHorizontal, _playerAllowedMovementVertical);
         _powerUpsController.Init(_powerUpsPool, _player.GetParameterModifiers());
 
@@ -52,11 +54,16 @@ public class GameController : MonoBehaviour {
         _gameOverUI.SetGetters(() => _scoreController.EnemiesKilledCount, () => _scoreController.TotalEnemiesCount, () => _scoreController.CollisionWithEnemiesCount, () => _scoreController.ShotsAccuracy, () => _scoreController.EffectiveHealthPowerUpsCount, () => _scoreController.GetPickedPowerUpsCount());
         _gameOverUI.Close();
 
-        SubscribeToPlayerEvents();
         _scoreController.SetGetters(() => _powerUpsController.PowerUpsCount);
     }
 
     private void Update() {
+
+        if (EventSystem.current.currentSelectedGameObject != null)
+        {
+            var s = 4;
+        }
+
         if (!_running) return;
         _enemySpawnTimer += Time.deltaTime;
         if (_enemySpawnTimer >= _gameBalanceSO.EnemySpawnInterval)

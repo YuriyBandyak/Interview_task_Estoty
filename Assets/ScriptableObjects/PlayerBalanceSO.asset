@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: PlayerBalanceSO
   m_EditorClassIdentifier: 
   _maxHealth: 3
-  _defaultSpeed: 0
   _defaultFireInterval: 0.4
+  _projectileSpeed: 5
   _speedCurve:
     serializedVersion: 2
     m_Curve:

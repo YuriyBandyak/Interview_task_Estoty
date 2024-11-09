@@ -77,7 +77,9 @@ public class PowerUpsController : MonoBehaviour {
             case PowerUpType.HEATH:
                 _playerParametersModifiers.IncreaseHealthAction.Invoke();
                 break;
-
+            case PowerUpType.SHIELD:
+                _playerParametersModifiers.ReceiveShieldAction.Invoke();
+                break;
             default:
                 Debug.LogError($"There is no behaviour for power up of type: {powerUpType}");
                 break;

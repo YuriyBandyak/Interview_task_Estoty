@@ -7,12 +7,14 @@ public class Player : MonoBehaviour {
     [SerializeField] private Transform _projectileSpawnLocation;
     [SerializeField] private PlayerBalanceSO _playerBalanceSO;
     [SerializeField] private Rigidbody _body;
+    [SerializeField] private MeshRenderer _shieldRenderer;
 
     private ParticlesPool _particlesPool;
     private ProjectilesPool _projectilesPool;
 
     private int _currentHealth;
     private float _fireTimer = 0.0f;
+    private bool _hasShield;
 
     private bool _hasInput = false;
     private Vector2 _lastInput;
@@ -38,6 +40,7 @@ public class Player : MonoBehaviour {
 
         OnPlayerHealthUpdateEvent?.Invoke(_currentHealth);
         _projectilesPool.Init();
+        ToggleShield(false);
     }
 
     public PlayerParametersModifiers GetParameterModifiers() {
@@ -45,6 +48,7 @@ public class Player : MonoBehaviour {
         {
             FireRateSetter = (float modifier) => _currentFireInterval = _playerBalanceSO.DefaultFireInterval * modifier,
             IncreaseHealthAction = IncreaseHealth,
+            ReceiveShieldAction = () => ToggleShield(true),
         };
         return modifiers;
     }
@@ -75,6 +79,11 @@ public class Player : MonoBehaviour {
     }
 
     public void Hit() {
+        if (_hasShield)
+        {
+            ToggleShield(false);
+            return;
+        }
         _currentHealth--;
         if (_currentHealth <= 0)
         {
@@ -110,7 +119,7 @@ public class Player : MonoBehaviour {
     private void FireProjectile() {
         var projectileGO = _projectilesPool.Get();
         projectileGO.gameObject.SetActive(true);
-        projectileGO.Init(1, OnProjectileDestoyAction, OnProjectileHitEvent);
+        projectileGO.Init(1, OnProjectileDestoyAction, _playerBalanceSO.ProjectileSpeed, OnProjectileHitEvent);
         projectileGO.transform.position = _projectileSpawnLocation.position;
         _fireTimer -= _currentFireInterval;
 
@@ -127,8 +136,14 @@ public class Player : MonoBehaviour {
         }
     }
 
+    private void ToggleShield(bool state) {
+        _hasShield = state;
+        _shieldRenderer.enabled = _hasShield;
+    }
+
     private void OnDie() {
-        Destroy(gameObject); 
+        Destroy(gameObject);
+        OnPlayerHealthUpdateEvent?.Invoke(_currentHealth);
         OnDieEvent?.Invoke();
 
         OnDieEvent = null;
