@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using PrimeTween;
 using System;
 using UnityEngine;
 
@@ -23,12 +22,13 @@ public class Player : MonoBehaviour {
 
     private float _currentFireInterval;
 
-    private event Action _onDieAction;
-    private event Action<int> _onPlayerHealthUpdateAction;
+    public event Action OnDieEvent;
+    public event Action<int> OnPlayerHealthUpdateEvent;
+    public event Action OnProjectileFiredEvent;
+    public event Action OnEffectiveHealEvent;
+    public event Action OnProjectileHitEvent;
 
-    public void Init(ParticlesPool particlesPool, ProjectilesPool projectilesPool, Action onPlayerDie, Action<int> updatePlayerHealthOnUIAction, Vector2 playerAllowedMovementHorizontal, Vector2 playerAllowedMovementVertical) {
-        this._onDieAction = onPlayerDie;
-        this._onPlayerHealthUpdateAction = updatePlayerHealthOnUIAction;
+    public void Init(ParticlesPool particlesPool, ProjectilesPool projectilesPool, Vector2 playerAllowedMovementHorizontal, Vector2 playerAllowedMovementVertical) {
         _particlesPool = particlesPool;
         _projectilesPool = projectilesPool;
         _playerAllowedMovementHorizontal = playerAllowedMovementHorizontal;
@@ -36,7 +36,7 @@ public class Player : MonoBehaviour {
         _currentHealth = _playerBalanceSO.MaxHealth;
         _currentFireInterval = _playerBalanceSO.DefaultFireInterval;
 
-        _onPlayerHealthUpdateAction.Invoke(_currentHealth);
+        OnPlayerHealthUpdateEvent?.Invoke(_currentHealth);
         _projectilesPool.Init();
     }
 
@@ -69,8 +69,8 @@ public class Player : MonoBehaviour {
     private void OnTriggerEnter(Collider other) {
         if (other.TryGetComponent<Enemy>(out var enemy))
         {
-            Hit();
             enemy.OnHitByPlayer();
+            Hit();
         }
     }
 
@@ -81,7 +81,7 @@ public class Player : MonoBehaviour {
             OnDie();
             return;
         }
-        _onPlayerHealthUpdateAction.Invoke(_currentHealth);
+        OnPlayerHealthUpdateEvent?.Invoke(_currentHealth);
     }
 
     private void CheckInputs() {
@@ -110,33 +110,33 @@ public class Player : MonoBehaviour {
     private void FireProjectile() {
         var projectileGO = _projectilesPool.Get();
         projectileGO.gameObject.SetActive(true);
-        projectileGO.Init(1, OnProjectileDestoyAction);
+        projectileGO.Init(1, OnProjectileDestoyAction, OnProjectileHitEvent);
         projectileGO.transform.position = _projectileSpawnLocation.position;
         _fireTimer -= _currentFireInterval;
+
+        OnProjectileFiredEvent?.Invoke();
     }
 
     private void IncreaseHealth() {
-        _currentHealth = Mathf.Min(_currentHealth + 1, _playerBalanceSO.MaxHealth);
-        _onPlayerHealthUpdateAction.Invoke(_currentHealth);
+        var newHealth = Mathf.Min(_currentHealth + 1, _playerBalanceSO.MaxHealth);
+        if (newHealth != _currentHealth)
+        {
+            _currentHealth = newHealth;
+            OnPlayerHealthUpdateEvent?.Invoke(_currentHealth);
+            OnEffectiveHealEvent?.Invoke();
+        }
     }
 
     private void OnDie() {
-        // TODO: idk maybe some slow motion (particles speed change) on death, current ui hide, then fading game over UI with score 
-        var fx = _particlesPool.Get(ParticleType.EXPLOSION_VFX);
-        fx.transform.position = transform.position;
-        WaitTillExplosionEnd(fx);
+        Destroy(gameObject); 
+        OnDieEvent?.Invoke();
 
-        Destroy(gameObject); // TODO: dont destroy, just hide and show after level restart. Should I realy do that? Currently its reloading level by ui (that 100% need refactoring)
-        _onDieAction?.Invoke();
+        OnDieEvent = null;
+        OnPlayerHealthUpdateEvent = null;
+        OnProjectileFiredEvent = null;
+        OnEffectiveHealEvent = null;
+        OnProjectileHitEvent = null;
     }
-
-    private async UniTask WaitTillExplosionEnd(ParticleSystem fx) {
-        await UniTask.Delay(Mathf.RoundToInt(fx.main.duration * 1000)); // TODO: check cancellation on aplication quit and similar stuff 
-        await UniTask.WaitUntil(() => fx.particleCount == 0);
-        fx.gameObject.SetActive(false);
-        _particlesPool.Return(fx, ParticleType.EXPLOSION_VFX);
-    }
-
     private void OnProjectileDestoyAction(Projectile projectile) {
         projectile.gameObject.SetActive(false);
         _projectilesPool.Return(projectile);

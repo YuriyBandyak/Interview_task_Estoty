@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd574eea01c7c7544a20237c1a93e5c7, type: 3}
   m_Name: GameBalanceSO
   m_EditorClassIdentifier: 
-  _enemySpawnInterval: 1.1111112e+9
+  _enemySpawnInterval: 1.25
   _scoreForKilledEnemy: 1
   _increaseScoreByEnemyPlayerCollision: 0

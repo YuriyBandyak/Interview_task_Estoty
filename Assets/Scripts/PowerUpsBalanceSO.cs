@@ -7,9 +7,11 @@ public class PowerUpsBalanceSO : ScriptableObject {
     [SerializeField] private List<SerializableKeyValuePair<EnemyType, float>> _powerUpsDropChancesByEnemyType;
     [SerializeField] private List<SerializableKeyValuePair<PowerUpType, float>> _powerUpsDropChances;
 
+    [SerializeField] private float _speed;
     [SerializeField] private float _fireRateIncrease;
 
     public float FireRateIncrease => _fireRateIncrease;
+    public float Speed => _speed;
 
     public float GetPowerUpDropChanceByEnemyType(EnemyType enemyType) {
         foreach (var kvp in _powerUpsDropChancesByEnemyType)

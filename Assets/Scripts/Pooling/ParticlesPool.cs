@@ -1,5 +1,3 @@
-﻿using UnityEngine;
-
-public class ParticlesPool : ComplexGenericPool<ParticleSystem, ParticleType> {
+﻿public class ParticlesPool : ComplexGenericPool<Particle, ParticleType> {
 
 }

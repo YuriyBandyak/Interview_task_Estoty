@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -7,11 +8,13 @@ public class PowerUpsController : MonoBehaviour {
     private PowerUpsPool _powerUpsPool;
     private PlayerParametersModifiers _playerParametersModifiers;
 
-    private Dictionary<PowerUpType, int> _powerUpsAmount;
+    private Dictionary<PowerUpType, int> _powerUpsCount;
+
+    public IReadOnlyList<KeyValuePair<PowerUpType, int>> PowerUpsCount => _powerUpsCount.ToList();
 
     public void Init(PowerUpsPool powerUpsPool, PlayerParametersModifiers playerParametersModifiers) {
         this._powerUpsPool = powerUpsPool;
-        _powerUpsAmount = new Dictionary<PowerUpType, int>();
+        _powerUpsCount = new Dictionary<PowerUpType, int>();
         _playerParametersModifiers = playerParametersModifiers;
     }
 
@@ -27,7 +30,7 @@ public class PowerUpsController : MonoBehaviour {
             var powerup = _powerUpsPool.Get(randomPowerUpType);
             powerup.transform.position = enemyDeathPosition;
             powerup.gameObject.SetActive(true);
-            powerup.Init(randomPowerUpType, OnPowerUpDestroy, OnPowerUpPickedUp);
+            powerup.Init(randomPowerUpType, OnPowerUpPickedUp, _powerUpsPool.Return, _powerUpsBalance.Speed);
         }
     }
 
@@ -57,19 +60,19 @@ public class PowerUpsController : MonoBehaviour {
     private void OnPowerUpPickedUp(PowerUp powerUp) {
 
         var powerUpType = powerUp.PowerUpType;
-        if (_powerUpsAmount.ContainsKey(powerUpType))
+        if (_powerUpsCount.ContainsKey(powerUpType))
         {
-            _powerUpsAmount[powerUpType]++;
+            _powerUpsCount[powerUpType]++;
         }
         else
         {
-            _powerUpsAmount.Add(powerUpType, 1);
+            _powerUpsCount.Add(powerUpType, 1);
         }
 
         switch (powerUpType)
         {
             case PowerUpType.FIRE_RATE:
-                _playerParametersModifiers.FireRateSetter.Invoke(Mathf.Pow(_powerUpsBalance.FireRateIncrease, _powerUpsAmount[powerUpType]));
+                _playerParametersModifiers.FireRateSetter.Invoke(Mathf.Pow(_powerUpsBalance.FireRateIncrease, _powerUpsCount[powerUpType]));
                 break;
             case PowerUpType.HEATH:
                 _playerParametersModifiers.IncreaseHealthAction.Invoke();

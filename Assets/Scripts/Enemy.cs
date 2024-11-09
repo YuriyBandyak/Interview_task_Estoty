@@ -1,10 +1,9 @@
 using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
-using static Enemy;
 using Random = UnityEngine.Random;
 
-public class Enemy : MonoBehaviour {
+public class Enemy : MonoBehaviour, IPoolable {
 
     private const float OutOfScreenOffset = .1f;
 
@@ -19,19 +18,19 @@ public class Enemy : MonoBehaviour {
     private int _health;
     private float _fireTimer;
 
-    private event Action<Enemy, DeathType> _onDieAction;
-    private event Action<Enemy> _onDestroyAction;
+    public event Action<Enemy, DeathType> OnDieEvent;
+    private event Action<Enemy> _returnToPoolAction;
 
     public EnemyType EnemyType => _enemyType;
 
-    public void Init(ProjectilesPool projectilesPool, ParticlesPool particlesPool, Action<Enemy, DeathType> OnDeathAction, Action<Enemy> OnDestroyAction, Func<float> currentGameTimeGetter) {
+    public void Init(ProjectilesPool projectilesPool, ParticlesPool particlesPool, Func<float> currentGameTimeGetter, Action<Enemy> ReturnToPoolAction) {
         _canFire = Random.value < _enemyBalance.CanFireChance;
+        _returnToPoolAction = ReturnToPoolAction;
         _health = _enemyBalance.MinimalHealth + Mathf.Min(Mathf.FloorToInt(currentGameTimeGetter.Invoke() / _enemyBalance.TimeOfHealthIncrease), _enemyBalance.MaximalHealth);
 
         _projectilesPool = projectilesPool;
         this._particlesPool = particlesPool;
-        this._onDieAction = OnDeathAction;
-        this._onDestroyAction = OnDestroyAction;
+        gameObject.SetActive(true);
     }
 
     public void OnProjectileHit(int damage) {
@@ -44,6 +43,11 @@ public class Enemy : MonoBehaviour {
 
     public void OnHitByPlayer() {
         Die(DeathType.BY_PLAYER_COLLISION);
+    }
+
+    public void ReturnPoolable() {
+        gameObject.SetActive(false);
+        _returnToPoolAction.Invoke(this);
     }
 
     private void Update() {
@@ -79,24 +83,16 @@ public class Enemy : MonoBehaviour {
 
     private void Die(DeathType deathType) {
         var fx = _particlesPool.Get(ParticleType.EXPLOSION_VFX);
-        fx.transform.position = transform.position;
-        fx.gameObject.SetActive(true);
-        fx.Play();
-        WaitTillExplosionEnd(fx);
+        fx.Init(ParticleType.EXPLOSION_VFX, _particlesPool.Return);
+        fx.PlayAndReturn(transform.position);
 
-        _onDieAction.Invoke(this, deathType);
+        OnDieEvent.Invoke(this, deathType);
         Destroy();
     }
 
     private void Destroy() {
-        _onDestroyAction.Invoke(this);
-    }
-
-    private async UniTask WaitTillExplosionEnd(ParticleSystem fx) {
-        await UniTask.Delay(Mathf.RoundToInt(fx.main.duration * 1000)); // TODO: check cancellation on aplication quit and similar stuff 
-        await UniTask.WaitUntil(() => fx.particleCount == 0);
-        fx.gameObject.SetActive(false);
-        _particlesPool.Return(fx, ParticleType.EXPLOSION_VFX);
+        ReturnPoolable();
+        OnDieEvent = null;
     }
 
     private void OnProjectileDestroy(Projectile projectile) {

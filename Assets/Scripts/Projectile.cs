@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class Projectile : MonoBehaviour {
+public class Projectile : MonoBehaviour, IPoolable {
 
     private const float OutOfScreenOffset = .1f;
 
@@ -9,14 +9,22 @@ public class Projectile : MonoBehaviour {
     [SerializeField] private Vector3 _direction = Vector3.up;
     private int _damage = 1;
 
-    private event Action<Projectile> OnDestroyAction;
+    private event Action _onHitAction;
+    private event Action _returnToPoolAction;
 
-    public void Init(int damage, Action<Projectile> OnDestroyAction) {
+    public void Init(int damage, Action<Projectile> ReturnToPoolAction, Action OnHitAction = null) {
         _damage = damage;
-        this.OnDestroyAction = OnDestroyAction;
+        _returnToPoolAction = () => ReturnToPoolAction(this);
+        this._onHitAction = OnHitAction;
+        gameObject.SetActive(true);
     }
 
-    void Update() {
+    public void ReturnPoolable() {
+        gameObject.SetActive(false);
+        _returnToPoolAction.Invoke();
+    }
+
+    private void Update() {
 
         Move();
         CheckBounds();
@@ -31,40 +39,38 @@ public class Projectile : MonoBehaviour {
     private void CheckBounds() {
         if (transform.IsOutOfScreen(OutOfScreenOffset))
         {
-            OnDie();
+            Destroy();
         }
     }
 
     private void OnTriggerEnter(Collider other) {
 
         bool destroy = false;
-        var enemy = other.GetComponent<Enemy>();
-        if (enemy != null)
+        if (other.TryGetComponent<Enemy>(out var enemy))
         {
-
             enemy.OnProjectileHit(_damage);
             destroy = true;
         }
-        else
+        else if (other.TryGetComponent<Player>(out var player))
         {
-            var player = other.GetComponent<Player>();
-            if (player != null)
-            {
-
-                player.Hit();
-                destroy = true;
-            }
+            player.Hit();
+            destroy = true;
         }
 
         if (destroy)
         {
-            OnDie();
+            Die();
         }
     }
 
-    private void OnDie() {
+    private void Die() {
+        _onHitAction?.Invoke();
+        Destroy();
+    }
+
+    private void Destroy() {
         var trailRenderer = GetComponent<TrailRenderer>();
         trailRenderer.Clear();
-        OnDestroyAction.Invoke(this);
+        ReturnPoolable();
     }
 }

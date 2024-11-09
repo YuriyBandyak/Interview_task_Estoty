@@ -20,4 +20,5 @@ MonoBehaviour:
     Value: 1
   - Key: 2
     Value: 0.4
+  _speed: 2
   _fireRateIncrease: 0.98

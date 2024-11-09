@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
 
-public class ParticlesFactory : GenericComponentsFactory<ParticleSystem> {
+public class ParticlesFactory : GenericComponentsFactory<Particle> {
 
 }
